@@ -1,5 +1,6 @@
 # Bitnami postgresql chart values — deployed alongside sonarqube/sonarqube in the sonarqube namespace.
 # The sonarqube chart's jdbcOverwrite points to the postgresql service this creates.
+fullnameOverride: postgresql
 auth:
   database: sonarqube
   username: sonarqube
@@ -10,6 +11,13 @@ auth:
 primary:
   nodeSelector:
     cloud.google.com/gke-nodepool: jenkins-controls-standard
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
   persistence:
     storageClass: standard-rwo
     size: 20Gi

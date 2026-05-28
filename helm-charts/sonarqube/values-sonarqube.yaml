@@ -40,10 +40,21 @@ jdbcOverwrite:
   jdbcSecretPasswordKey: "password"
 
 # Monitoring passcode required by the chart for liveness/readiness probes.
-# The ExternalSecret in externalsecret-sonarqube.yaml should also create this K8s Secret.
+# The ExternalSecret in externalsecret-sonarqube.yaml must also create this K8s Secret.
 monitoringPasscodeSecretName: "sonarqube-monitoring-passcode"
 monitoringPasscodeSecretKey: "passcode"
 
 # Schedule SonarQube on the same node pool as all other control-plane workloads.
 nodeSelector:
   cloud.google.com/gke-nodepool: jenkins-controls-standard
+
+resources:
+  requests:
+    memory: 3Gi
+    cpu: 400m
+  limits:
+    memory: 6Gi
+    cpu: 800m
+
+service:
+  type: ClusterIP
