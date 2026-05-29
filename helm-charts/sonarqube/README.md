@@ -46,6 +46,9 @@ see "Post-deploy Jenkins wiring" below.
 
 ## Deploy
 
+    # 0. Create the namespace first
+    kubectl create namespace sonarqube --dry-run=client -o yaml | kubectl apply -f -
+
     # 1. Apply ExternalSecrets first — K8s Secrets must exist before the chart starts
     kubectl apply -f helm-charts/sonarqube/externalsecret-sonarqube.yaml \
       --namespace sonarqube
