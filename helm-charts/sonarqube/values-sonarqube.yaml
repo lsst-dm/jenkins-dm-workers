@@ -1,0 +1,60 @@
+# Deploy the SonarQube Community Build (open-source edition).
+community:
+  enabled: true
+
+# Ingress — follows the identical pattern used by helm-charts/atlantis and helm-charts/openbao.
+# Requires a GCP global static IP named "sonarqube" to be reserved before deploying.
+ingress:
+  enabled: true
+  ingressClassName: "gce"
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: "sonarqube"
+  hosts:
+    - name: ci-sonarqube.lsst.cloud
+      path: /*
+  tls:
+    - secretName: sonarqube-tls
+      hosts:
+        - ci-sonarqube.lsst.cloud
+
+# Admin password — the ExternalSecret in externalsecret-sonarqube.yaml creates this K8s Secret.
+# NOTE: sonarqube/sonarqube chart 2026.x uses setAdminPassword.passwordSecretName.
+# The deprecated account.adminPasswordSecretName key has been intentionally avoided.
+setAdminPassword:
+  passwordSecretName: sonarqube-admin-password  # key: password
+
+# NOTE: The sonarqube/sonarqube chart (2026.x) does NOT bundle a PostgreSQL subchart
+# (its only dependency is ingress-nginx). PostgreSQL must be deployed separately, e.g.
+# via the Bitnami postgresql chart, scheduled on jenkins-controls-standard with a
+# standard-rwo PVC of at least 20Gi. The jdbcOverwrite block below wires SonarQube to
+# a PostgreSQL service named "postgresql" in the same namespace.
+jdbcOverwrite:
+  enabled: true
+  jdbcUrl: "jdbc:postgresql://postgresql:5432/sonarqube"
+  jdbcUsername: "sonarqube"
+  jdbcSecretName: "sonarqube-db-password"
+  jdbcSecretPasswordKey: "password"
+
+# Monitoring passcode required by the chart for liveness/readiness probes.
+# The ExternalSecret in externalsecret-sonarqube.yaml must also create this K8s Secret.
+monitoringPasscodeSecretName: "sonarqube-monitoring-passcode"
+monitoringPasscodeSecretKey: "passcode"
+
+# Schedule SonarQube on the same node pool as all other control-plane workloads.
+nodeSelector:
+  cloud.google.com/gke-nodepool: jenkins-controls-standard
+
+resources:
+  requests:
+    memory: 3Gi
+    cpu: 400m
+  limits:
+    memory: 6Gi
+    cpu: 800m
+
+service:
+  type: ClusterIP
