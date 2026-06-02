@@ -6,7 +6,10 @@ accessible at `https://ci-sonarqube.lsst.cloud`. Uses two Helm charts:
 - [`sonarqube/sonarqube`](https://github.com/SonarSource/helm-chart-sonarqube) 2026.x community chart
 - [`bitnami/postgresql`](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) — in-cluster database (the 2026.x sonarqube chart no longer bundles a PostgreSQL subchart)
 
-Secrets are sourced from OpenBao (`ci-vault.lsst.cloud`) via the External Secrets Operator.
+Secrets are stored in OpenBao (`ci-vault.lsst.cloud`) and copied into Kubernetes Secrets manually
+with `bao` + `kubectl` (see "Create Kubernetes Secrets from OpenBao" below). The
+`externalsecret-sonarqube.yaml` manifest is kept in-tree for a future migration to the External
+Secrets Operator but is **not** applied today — the cluster currently has no ESO CRDs installed.
 
 ---
 
@@ -20,11 +23,9 @@ Secrets are sourced from OpenBao (`ci-vault.lsst.cloud`) via the External Secret
    exist in OpenBao before the charts are installed (see "Provision secrets" below). The Jenkins
    token path is populated post-deploy.
 
-3. **ESO ClusterSecretStore** — confirm a `ClusterSecretStore` named `openbao` exists in the
-   cluster and can reach `ci-vault.lsst.cloud`. If the store uses a different name, update the
-   `secretStoreRef.name` field in `externalsecret-sonarqube.yaml`. If secrets fail to sync, check
-   whether ESO inserts `/data/` automatically for KV v2 — if so, adjust `remoteRef.key` from
-   `secret/data/sonarqube/<name>` to `sonarqube/<name>`.
+3. **`bao` CLI authenticated** — you must be logged in to OpenBao (`bao login ...` against
+   `ci-vault.lsst.cloud`) with read access to `secret/sonarqube/*` so the `kubectl create secret`
+   commands below can resolve the values.
 
 4. **Jenkins SonarQube plugin** — install the Jenkins SonarQube plugin on the Jenkins controller
    before attempting to use `withSonarQubeEnv` in pipelines.
@@ -44,29 +45,50 @@ see "Post-deploy Jenkins wiring" below.
 
 ---
 
-## Deploy
+## Create Kubernetes Secrets from OpenBao
 
-    # 0. Create the namespace first
+The chart expects three Kubernetes Secrets to already exist in the `sonarqube` namespace before
+it starts (the fourth, `sonarqube-token`, is created post-deploy). Pull each value from OpenBao
+and pipe it into `kubectl create secret`:
+
+    # Create the namespace first (idempotent)
     kubectl create namespace sonarqube --dry-run=client -o yaml | kubectl apply -f -
 
-    # 1. Apply ExternalSecrets first — K8s Secrets must exist before the chart starts
-    kubectl apply -f helm-charts/sonarqube/externalsecret-sonarqube.yaml \
-      --namespace sonarqube
+    # Admin password
+    kubectl create secret generic sonarqube-admin-password -n sonarqube \
+      --from-literal=password="$(bao kv get -field=value secret/sonarqube/admin-password)"
 
-    # Confirm admin-password, db-password, and monitoring-passcode synced (token will be NotReady)
-    kubectl get externalsecret -n sonarqube
+    # DB password
+    kubectl create secret generic sonarqube-db-password -n sonarqube \
+      --from-literal=password="$(bao kv get -field=value secret/sonarqube/db-password)"
 
-    # 2. Add Helm repos
+    # Monitoring passcode
+    kubectl create secret generic sonarqube-monitoring-passcode -n sonarqube \
+      --from-literal=passcode="$(bao kv get -field=value secret/sonarqube/monitoring-passcode)"
+
+Confirm:
+
+    kubectl get secret -n sonarqube
+
+To rotate a value, update it in OpenBao (`bao kv put ...`) and re-run the matching command above
+with `kubectl create secret ... --dry-run=client -o yaml | kubectl apply -f -` so the existing
+Secret is overwritten in place.
+
+---
+
+## Deploy
+
+    # 1. Add Helm repos
     helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
     helm repo add bitnami   https://charts.bitnami.com/bitnami
     helm repo update
 
-    # 3. Deploy PostgreSQL first — SonarQube needs the DB to be ready on startup
+    # 2. Deploy PostgreSQL first — SonarQube needs the DB to be ready on startup
     helm upgrade --install postgresql bitnami/postgresql \
       --namespace sonarqube --create-namespace \
       -f helm-charts/sonarqube/values-postgresql.yaml
 
-    # 4. Deploy SonarQube
+    # 3. Deploy SonarQube
     helm upgrade --install sonarqube sonarqube/sonarqube \
       --namespace sonarqube \
       -f helm-charts/sonarqube/values-sonarqube.yaml
@@ -88,10 +110,10 @@ Once SonarQube is running at `https://ci-sonarqube.lsst.cloud`:
 
        bao kv put secret/sonarqube/jenkins-token value=<token-from-step-2>
 
-4. Force the ExternalSecret to sync immediately (otherwise it syncs within 1 hour):
+4. Create the matching Kubernetes Secret:
 
-       kubectl annotate externalsecret sonarqube-token \
-         force-sync=$(date +%s) --overwrite -n sonarqube
+       kubectl create secret generic sonarqube-token -n sonarqube \
+         --from-literal=token="$(bao kv get -field=value secret/sonarqube/jenkins-token)"
 
 5. Confirm the K8s Secret exists:
 
