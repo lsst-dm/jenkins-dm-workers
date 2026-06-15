@@ -107,7 +107,7 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
-    machine_type    = "c4d-highmem-32"
+    machine_type    = "c4d-standard-32"
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
@@ -183,7 +183,7 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
-    machine_type    = "c4a-highmem-32"
+    machine_type    = "c4a-standard-32"
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
