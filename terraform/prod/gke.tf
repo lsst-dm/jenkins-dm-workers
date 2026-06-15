@@ -37,7 +37,7 @@ resource "google_container_cluster" "jenkins_test" {
       enabled = true
     }
     horizontal_pod_autoscaling {
-      disabled = false
+      disabled = true
     }
     http_load_balancing {
       disabled = false
