@@ -46,12 +46,9 @@ spec:
       runAsNonRoot: false
       runAsUser: 1000
     resources:
-      limits:
-        cpu: "8"
-        memory: 64Gi
       requests:
         cpu: "8"
-        memory: 64Gi
+        memory: 27Gi
     terminationMessagePath: /dev/termination-log
     terminationMessagePolicy: File
   - args:
@@ -90,12 +87,9 @@ spec:
       successThreshold: 1
       timeoutSeconds: 1
     resources:
-      limits:
-        cpu: "12"
-        memory: 64Gi
       requests:
-        cpu: "12"
-        memory: 64Gi
+        cpu: "7"
+        memory: 21.5Gi
         ephemeral-storage: 150Gi
     securityContext:
       allowPrivilegeEscalation: true
@@ -140,7 +134,7 @@ spec:
         memory: 512Mi
       requests:
         cpu: 500m
-        memory: 512Mi
+        memory: 100Mi
     securityContext:
       allowPrivilegeEscalation: true
       privileged: false
