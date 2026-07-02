@@ -29,15 +29,8 @@ resource "google_service_account" "prompt_image_upload" {
   description  = "Uploads images to main bucket"
   display_name = "prompt-image-upload"
 }
-resource "google_service_account" "usdf_pp_docker_pull" {
-  account_id   = "usdf-pp-docker-pull"
-  description  = "usdf prompt processing docker pull secret"
-  display_name = "usdf-pp-docker-pull"
-  disabled     = "true"
-}
 resource "google_service_account" "vault_google_oauth" {
   account_id   = "vault-google-oauth"
   description  = "Service account used for google oauth group mapping"
   display_name = "vault-google-oauth"
 }
-
