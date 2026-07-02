@@ -159,6 +159,7 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
   }
   node_locations = [
     "us-central1-c",
+    "us-central1-a",
   ]
   project = "prompt-proto"
 
