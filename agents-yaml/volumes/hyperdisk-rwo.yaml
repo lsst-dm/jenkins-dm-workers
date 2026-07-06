@@ -2,7 +2,7 @@ allowVolumeExpansion: true
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: aarch-volume
+  name: hyperdisk-rwo
 parameters:
   type: hyperdisk-balanced
 provisioner: pd.csi.storage.gke.io
