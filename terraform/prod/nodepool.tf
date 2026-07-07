@@ -77,8 +77,9 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
   name               = "jenkins-workers-c4d"
   initial_node_count = 4
   autoscaling {
-    min_node_count       = 0
+    total_min_node_count = 0
     total_max_node_count = 8
+    location_policy      = "ANY"
   }
   node_locations = [
     "us-central1-c",
@@ -143,6 +144,10 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
     max_unavailable = 0
     strategy        = "SURGE"
   }
+
+  lifecycle {
+    ignore_changes = [initial_node_count]
+  }
 }
 
 
@@ -154,8 +159,9 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
   name               = "jenkins-workers-multiarch-c4a"
   initial_node_count = 9
   autoscaling {
-    min_node_count = 0
-    max_node_count = 8
+    total_min_node_count = 0
+    total_max_node_count = 8
+    location_policy      = "ANY"
   }
   node_locations = [
     "us-central1-c",
@@ -217,5 +223,9 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
     max_surge       = 1
     max_unavailable = 0
     strategy        = "SURGE"
+  }
+
+  lifecycle {
+    ignore_changes = [initial_node_count]
   }
 }
