@@ -156,7 +156,7 @@ spec:
       readOnly: true
   dnsPolicy: ClusterFirst
   nodeSelector:
-    cloud.google.com/gke-nodepool: jenkins-workers-c4d
+    worktype: workers
   enableServiceLinks: true
   preemptionPolicy: PreemptLowerPriority
   priority: 0

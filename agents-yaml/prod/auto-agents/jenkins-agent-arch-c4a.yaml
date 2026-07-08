@@ -158,7 +158,7 @@ spec:
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
   nodeSelector:
-    cloud.google.com/gke-nodepool: jenkins-workers-multiarch-c4a
+    workload: workers
     kubernetes.io/arch: arm64
   preemptionPolicy: PreemptLowerPriority
   priority: 0
