@@ -82,8 +82,10 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
     location_policy      = "ANY"
   }
   node_locations = [
-    "us-central1-c",
     "us-central1-a",
+    "us-central1-b",
+    "us-central1-c",
+    "us-central1-f",
   ]
   project = "prompt-proto"
 
@@ -166,8 +168,10 @@ resource "google_container_node_pool" "jenkins_workers_c4_fallback" {
     location_policy      = "ANY"
   }
   node_locations = [
-    "us-central1-c",
     "us-central1-a",
+    "us-central1-b",
+    "us-central1-c",
+    "us-central1-f",
   ]
   project = "prompt-proto"
 
@@ -236,7 +240,7 @@ resource "google_container_node_pool" "jenkins_workers_c4_fallback" {
 
 # arm64 fallback pool. Shares the "workload=workers" node label with
 # jenkins-workers-multiarch-c4a so arm agent pods can land here when C4A
-# capacity is unavailable. T2A is only offered in us-central1-a here and
+# capacity is unavailable. T2A runs in us-central1-a/b/f (not -c) and
 # supports pd-balanced boot disks only (no hyperdisk). GKE auto-taints arm
 # nodes with kubernetes.io/arch=arm64:NoSchedule.
 resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
@@ -252,6 +256,8 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
   }
   node_locations = [
     "us-central1-a",
+    "us-central1-b",
+    "us-central1-f",
   ]
   project = "prompt-proto"
 
@@ -329,8 +335,10 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
     location_policy      = "ANY"
   }
   node_locations = [
-    "us-central1-c",
     "us-central1-a",
+    "us-central1-b",
+    "us-central1-c",
+    "us-central1-f",
   ]
   project = "prompt-proto"
 
