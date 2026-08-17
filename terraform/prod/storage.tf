@@ -19,12 +19,12 @@ resource "google_compute_backend_bucket" "doxygen_dev_backend" {
   edge_security_policy    = null
   enable_cdn              = true
   cdn_policy {
-    cache_mode        = "CACHE_ALL_STATIC"
-    client_ttl        = 3600
-    default_ttl       = 3600
-    max_ttl           = 86400
-    negative_caching  = true
-    serve_while_stale = 86400
+    cache_mode         = "CACHE_ALL_STATIC"
+    client_ttl         = 3600
+    default_ttl        = 3600
+    max_ttl            = 86400
+    negative_caching   = true
+    serve_while_stale  = 86400
     request_coalescing = true
   }
 }
@@ -39,12 +39,12 @@ resource "google_compute_backend_bucket" "doxygen_backend" {
   edge_security_policy    = null
   enable_cdn              = true
   cdn_policy {
-    cache_mode        = "CACHE_ALL_STATIC"
-    client_ttl        = 3600
-    default_ttl       = 3600
-    max_ttl           = 86400
-    negative_caching  = true
-    serve_while_stale = 86400
+    cache_mode         = "CACHE_ALL_STATIC"
+    client_ttl         = 3600
+    default_ttl        = 3600
+    max_ttl            = 86400
+    negative_caching   = true
+    serve_while_stale  = 86400
     request_coalescing = true
   }
 }
