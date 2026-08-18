@@ -1,0 +1,18 @@
+apiVersion: cloud.google.com/v1
+kind: ComputeClass
+metadata:
+  name: jenkins-workers-x86
+spec:
+  # Each priority rule is tried in order, so a pod only lands on C4 once C4D has
+  # no capacity. Pools within one rule would be unordered, hence one pool per rule.
+  priorities:
+  - nodepools: [jenkins-workers-c4d]
+  - nodepools: [jenkins-workers-c4-fallback]
+  # Leave the pod Pending rather than scaling up a node with the cluster's default
+  # machine configuration. A default node would be the wrong size and, more
+  # importantly, would not accept the hyperdisk-balanced /j volume the agent pods
+  # declare, so the pod would fail on volume attach instead of simply waiting.
+  whenUnsatisfiable: DoNotScaleUp
+  # activeMigration is deliberately unset. optimizeRulePriority would drain pods
+  # off the fallback pool once C4D capacity returned, which for this cluster means
+  # killing multi-hour stack builds mid-flight.

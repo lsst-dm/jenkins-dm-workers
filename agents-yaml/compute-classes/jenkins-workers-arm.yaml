@@ -1,0 +1,23 @@
+apiVersion: cloud.google.com/v1
+kind: ComputeClass
+metadata:
+  name: jenkins-workers-arm
+spec:
+  # Each priority rule is tried in order, so a pod only lands on N4A once C4A has
+  # no capacity. Pools within one rule would be unordered, hence one pool per rule.
+  #
+  # Both families are Axion (arm64) and both accept hyperdisk-balanced, which is
+  # what lets arm agent pods declare the same /j volume as x86 ones. Any future
+  # fallback family must also accept hyperdisk-balanced: a pod's volume spec is
+  # fixed before it is scheduled, so a family without Hyperdisk would leave the pod
+  # deadlocked on volume attach -- worse than the stockout this exists to escape.
+  # T2A was rejected as the fallback for exactly this reason (pd-balanced only).
+  priorities:
+  - nodepools: [jenkins-workers-multiarch-c4a]
+  - nodepools: [jenkins-workers-n4a-fallback]
+  # Leave the pod Pending rather than scaling up a node with the cluster's default
+  # machine configuration, which would be x86 and could not run an arm64 image.
+  whenUnsatisfiable: DoNotScaleUp
+  # activeMigration is deliberately unset. optimizeRulePriority would drain pods
+  # off the fallback pool once C4A capacity returned, which for this cluster means
+  # killing multi-hour stack builds mid-flight.

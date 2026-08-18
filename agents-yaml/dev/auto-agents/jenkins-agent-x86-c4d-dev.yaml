@@ -150,7 +150,7 @@ spec:
       readOnly: true
   dnsPolicy: ClusterFirst
   nodeSelector:
-    cloud.google.com/gke-nodepool: jenkins-workers-c4d
+    cloud.google.com/compute-class: jenkins-workers-x86
   enableServiceLinks: true
   preemptionPolicy: PreemptLowerPriority
   priority: 0
@@ -166,6 +166,10 @@ spec:
   shareProcessNamespace: false
   terminationGracePeriodSeconds: 1200
   tolerations:
+  - effect: NoSchedule
+    key: cloud.google.com/compute-class
+    operator: Equal
+    value: jenkins-workers-x86
   - effect: NoExecute
     key: node.kubernetes.io/not-ready
     operator: Exists

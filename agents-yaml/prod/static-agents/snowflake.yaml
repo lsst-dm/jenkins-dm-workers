@@ -177,6 +177,11 @@ spec:
           name: ws-snowflake
         workingDir: /j
       dnsPolicy: ClusterFirst
+      # Deliberately pinned to the C4A pool by name rather than selecting the
+      # jenkins-workers-arm ComputeClass: this is a long-lived stateful agent and we
+      # do not want it migrating between machine families. The cost of staying pinned
+      # is the explicit compute-class toleration below -- GKE only auto-injects that
+      # toleration for pods that select the class.
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-workers-multiarch-c4a
         kubernetes.io/arch: arm64
@@ -190,6 +195,10 @@ spec:
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       tolerations:
+      - effect: NoSchedule
+        key: cloud.google.com/compute-class
+        operator: Equal
+        value: jenkins-workers-arm
       - effect: NoExecute
         key: workload
         operator: Equal

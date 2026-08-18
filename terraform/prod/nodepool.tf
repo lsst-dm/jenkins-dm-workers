@@ -106,11 +106,18 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
     enable_confidential_storage = false
     image_type                  = "COS_CONTAINERD"
     labels = {
-      "worktype" = "workers"
+      "worktype"                       = "workers"
+      "cloud.google.com/compute-class" = "jenkins-workers-x86"
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
     machine_type    = "c4d-standard-32"
+
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "jenkins-workers-x86"
+      effect = "NO_SCHEDULE"
+    }
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
@@ -153,9 +160,9 @@ resource "google_container_node_pool" "jenkins_workers_c4d" {
 }
 
 
-# x86 fallback pool. Shares the "worktype=workers" node label with
-# jenkins-workers-c4d so x86 agent pods can land here when C4D capacity is
-# unavailable (stockout). c4-standard-32 is also hyperdisk-only.
+# x86 fallback pool, priority 2 of the jenkins-workers-x86 ComputeClass: x86 agent
+# pods land here when C4D is out of capacity. c4-standard-32 is also hyperdisk-only,
+# so it takes the same /j volume spec as C4D.
 resource "google_container_node_pool" "jenkins_workers_c4_fallback" {
   cluster            = google_container_cluster.jenkins_test.name
   location           = google_container_cluster.jenkins_test.location
@@ -191,11 +198,18 @@ resource "google_container_node_pool" "jenkins_workers_c4_fallback" {
     enable_confidential_storage = false
     image_type                  = "COS_CONTAINERD"
     labels = {
-      "worktype" = "workers"
+      "worktype"                       = "workers"
+      "cloud.google.com/compute-class" = "jenkins-workers-x86"
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
     machine_type    = "c4-standard-32"
+
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "jenkins-workers-x86"
+      effect = "NO_SCHEDULE"
+    }
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
@@ -238,16 +252,17 @@ resource "google_container_node_pool" "jenkins_workers_c4_fallback" {
 }
 
 
-# arm64 fallback pool. Shares the "workload=workers" node label with
-# jenkins-workers-multiarch-c4a so arm agent pods can land here when C4A
-# capacity is unavailable. T2A runs in us-central1-a/b/f (not -c) and
-# supports pd-balanced boot disks only (no hyperdisk). GKE auto-taints arm
-# nodes with kubernetes.io/arch=arm64:NoSchedule.
-resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
+# arm64 fallback pool, priority 2 of the jenkins-workers-arm ComputeClass:
+# arm agent pods land here when C4A is out of capacity. N4A is Axion, like C4A,
+# and accepts hyperdisk-balanced -- which matters because a pod's volume spec is
+# fixed before scheduling, so both arm families have to accept the same /j volume.
+# This replaced a T2A pool that could take neither Hyperdisk nor Local SSD.
+# GKE auto-taints arm nodes with kubernetes.io/arch=arm64:NoSchedule.
+resource "google_container_node_pool" "jenkins_workers_n4a_fallback" {
   cluster            = google_container_cluster.jenkins_test.name
   location           = google_container_cluster.jenkins_test.location
   max_pods_per_node  = 110
-  name               = "jenkins-workers-t2a-fallback"
+  name               = "jenkins-workers-n4a-fallback"
   initial_node_count = 0
   autoscaling {
     total_min_node_count = 0
@@ -257,6 +272,7 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
   node_locations = [
     "us-central1-a",
     "us-central1-b",
+    "us-central1-c",
     "us-central1-f",
   ]
   project = "prompt-proto"
@@ -273,15 +289,22 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
 
   node_config {
     disk_size_gb                = 900
-    disk_type                   = "pd-balanced"
+    disk_type                   = "hyperdisk-balanced"
     enable_confidential_storage = false
     image_type                  = "COS_CONTAINERD"
     labels = {
-      "workload" = "workers"
+      "workload"                       = "workers"
+      "cloud.google.com/compute-class" = "jenkins-workers-arm"
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
-    machine_type    = "t2a-standard-32"
+    machine_type    = "n4a-standard-32"
+
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "jenkins-workers-arm"
+      effect = "NO_SCHEDULE"
+    }
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
@@ -359,11 +382,18 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
     enable_confidential_storage = false
     image_type                  = "COS_CONTAINERD"
     labels = {
-      "workload" = "workers"
+      "workload"                       = "workers"
+      "cloud.google.com/compute-class" = "jenkins-workers-arm"
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
     machine_type    = "c4a-standard-32"
+
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "jenkins-workers-arm"
+      effect = "NO_SCHEDULE"
+    }
     metadata = {
       "disable-legacy-endpoints" = "true"
     }
