@@ -152,7 +152,7 @@ spec:
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
   nodeSelector:
-    cloud.google.com/gke-nodepool: jenkins-workers-multiarch-c4a
+    cloud.google.com/compute-class: jenkins-workers-arm
     kubernetes.io/arch: arm64
   preemptionPolicy: PreemptLowerPriority
   priority: 0
@@ -168,6 +168,10 @@ spec:
   shareProcessNamespace: false
   terminationGracePeriodSeconds: 30
   tolerations:
+  - effect: NoSchedule
+    key: cloud.google.com/compute-class
+    operator: Equal
+    value: jenkins-workers-arm
   - effect: NoExecute
     key: node.kubernetes.io/not-ready
     operator: Exists
