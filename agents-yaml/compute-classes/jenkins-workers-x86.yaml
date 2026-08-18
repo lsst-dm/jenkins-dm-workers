@@ -8,6 +8,7 @@ spec:
   priorities:
   - nodepools: [jenkins-workers-c4d]
   - nodepools: [jenkins-workers-c4-fallback]
+  - nodepools: [jenkins-workers-n4-fallback]
   # Leave the pod Pending rather than scaling up a node with the cluster's default
   # machine configuration. A default node would be the wrong size and, more
   # importantly, would not accept the hyperdisk-balanced /j volume the agent pods
