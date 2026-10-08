@@ -10,6 +10,7 @@ resource "google_container_node_pool" "jenkins_controls_standard" {
   max_pods_per_node = 110
   name              = "jenkins-controls-standard"
   node_locations = [
+    "us-central1-a",
     "us-central1-c",
   ]
   project = "prompt-proto"
