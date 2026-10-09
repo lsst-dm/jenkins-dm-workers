@@ -15,7 +15,8 @@ spec:
   priorities:
   - nodepools: [jenkins-workers-multiarch-c4a]
   - nodepools: [jenkins-workers-n4a-fallback]
-  - nodepools: [jenkins-workers-t2a-fallback]
+  - nodepools: [jenkins-workers-n4a64-fallback]
+  # - nodepools: [jenkins-workers-t2a-fallback]
   # Leave the pod Pending rather than scaling up a node with the cluster's default
   # machine configuration, which would be x86 and could not run an arm64 image.
   whenUnsatisfiable: DoNotScaleUp

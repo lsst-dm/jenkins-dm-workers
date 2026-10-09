@@ -432,11 +432,11 @@ resource "google_container_node_pool" "jenkins_workers_n4a_fallback" {
 
 
 # arm64 fallback pool, priority 3 of the jenkins-workers-arm ComputeClass.
-resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
+resource "google_container_node_pool" "jenkins_workers_n4a64_fallback" {
   cluster            = google_container_cluster.jenkins_test.name
   location           = google_container_cluster.jenkins_test.location
   max_pods_per_node  = 110
-  name               = "jenkins-workers-t2a-fallback"
+  name               = "jenkins-workers-n4a64-fallback"
   initial_node_count = 0
   autoscaling {
     total_min_node_count = 0
@@ -446,6 +446,7 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
   node_locations = [
     "us-central1-a",
     "us-central1-b",
+    "us-central1-c",
     "us-central1-f",
   ]
   project = "prompt-proto"
@@ -464,7 +465,7 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
     # pd-balanced, not hyperdisk-balanced: T2A predates Hyperdisk and accepts
     # neither it nor Local SSD. See the pool comment above for why that is safe.
     disk_size_gb                = 900
-    disk_type                   = "pd-balanced"
+    disk_type                   = "hyperdisk-balanced"
     enable_confidential_storage = false
     image_type                  = "COS_CONTAINERD"
     labels = {
@@ -473,7 +474,7 @@ resource "google_container_node_pool" "jenkins_workers_t2a_fallback" {
     }
     local_ssd_count = 0
     logging_variant = "DEFAULT"
-    machine_type    = "t2a-standard-32"
+    machine_type    = "n4a-highmem-64"
 
     taint {
       key    = "cloud.google.com/compute-class"
@@ -606,4 +607,28 @@ resource "google_container_node_pool" "jenkins_workers_multiarch_c4a" {
   lifecycle {
     ignore_changes = [initial_node_count]
   }
+}
+
+# Capacity floor for nightly aarch64 builds. Auto-consumable, so
+# jenkins-workers-multiarch-c4a picks it up with no reservation_affinity of its
+# own -- that block lives in the immutable node_config and would replace the
+# pool. machine_type must match that pool exactly or nothing consumes this.
+#
+# Bills 24/7 at the on-demand rate until deleted; no auto-delete. Review
+# 2027-04-09, then remove this block.
+resource "google_compute_reservation" "jenkins_c4a" {
+  name    = "jenkins-c4a-standard-32"
+  project = "prompt-proto"
+  zone    = "us-central1-b"
+
+  specific_reservation_required = false
+
+  specific_reservation {
+    count = 1
+    instance_properties {
+      machine_type = "c4a-standard-32"
+    }
+  }
+
+  description = "Jenkins nightly aarch64 capacity floor. Review 2027-04-09."
 }
