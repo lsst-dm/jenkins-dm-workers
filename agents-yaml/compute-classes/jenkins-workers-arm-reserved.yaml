@@ -1,0 +1,14 @@
+apiVersion: cloud.google.com/v1
+kind: ComputeClass
+metadata:
+  name: jenkins-workers-arm-reserved
+spec:
+  # Reserved capacity first, then the same chain as jenkins-workers-arm, so work
+  # degrades to normal behaviour once the one-node floor is full. Selected only by
+  # the nightly; see README.md.
+  priorities:
+  - nodepools: [jenkins-workers-c4a-reserved]
+  - nodepools: [jenkins-workers-multiarch-c4a]
+  - nodepools: [jenkins-workers-n4a-fallback]
+  - nodepools: [jenkins-workers-n4a64-fallback]
+  whenUnsatisfiable: DoNotScaleUp
