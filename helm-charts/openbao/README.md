@@ -35,12 +35,15 @@ helm repo update
 ### Upgrade the release
 Use the values file listed in this repo.
 ```bash
-helm upgrade openbao openbao/openbao -n vault-openbao -f values-openbao.yaml
+helm upgrade openbao openbao/openbao -n vault-openbao -f values-openbao.yaml --force-conflicts
 ```
 
 ---
 
-## Unsealing the Vault
+## Auto-Unsealing the Vault
+Google KMS has been configured to auto-unseal the vault in the event of a restart of the pod. Since enabled, manual unsealing should not be required. The auto-unseal is configured in the openbao helm chart, and on google cloud a keyring and crypto key have been set up. 
+
+## Manuall Unsealing the Vault
 
 If the Openbao pod is in a `Running` state but shows `0/1` ready, it is likely sealed. While sealed, the vault is encrypted and cannot serve requests to Jenkins, breaking Jenkins runs. The macs will also be unable to connect to Jenkins.
 
